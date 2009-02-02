@@ -125,7 +125,7 @@ module ::Redmine
           files.each do |file|
             BibTeX::log.info "reading and parsing #{file}"  
             text=IO.read(file)
-            @@bibdata.scan(text)
+            @@bibdata.scan(text,file)
             BibTeX::log.info "reading bbl file"             
           end          
         end

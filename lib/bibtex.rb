@@ -259,10 +259,11 @@ module BibTeX
   class BibParse
     
     # BibLex object defines input, bibdata is output
-    def initialize(biblex,bibtexdata)
+    def initialize(biblex,bibtexdata,from_source=nil)
       @lex=biblex # communication exclusively via @lookahead and self#next_token
       @output=bibtexdata
       @entry=nil
+      @from_source=from_source || 'source unknown'
       next_token
     end
     
@@ -315,6 +316,7 @@ module BibTeX
       id=expect :id
       
       @entry=BibTeXData::Entry.new(id,type)
+      @entry.add_field('$from_source',@from_source)
       @entry.add_field('$source_offset',offset)
       
       expect :comma
@@ -448,18 +450,18 @@ module BibTeX
       make_bbl if !have_bbl?
     end   
 
-    # add data
-    def scan(text)
+    # add data (sets '$from_source' tag if given)
+    def scan(text,from_source=nil)
       @timestamp+=1
       lexer=BibLex.new(text)
-      parser=BibParse.new(lexer,self)
+      parser=BibParse.new(lexer,self,from_source)
       parser.parse
     end
     
     # add an entry (called by BibParse)
     def add(entry)
       @timestamp+=1
-      self[entry['$id']]=entry
+      self[entry['$id']]=entry      
     end
     
     # restore BibTeX file from fields
@@ -489,10 +491,6 @@ module BibTeX
 \\end{document}
 END
       end
-
-      #rv=`cd /tmp ; ( latex -halt-on-error bibtexdata &&\
-      #  bibtex bibtexdata )`
-      #raise "make_bbl failed: #{rv}" if $?.exitstatus!=0
 
       BibTeX.execute('cd %s ; %s -halt-on-error bibtexdata' % 
                      [BibTeX.tmpdir,@@latex]) do |info|
