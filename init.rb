@@ -1,5 +1,6 @@
 require 'redmine'
 require 'thread'
+require 'erb'
 
 # redmine/vendor/plugins/redmine_latex/init.rb
 
@@ -175,6 +176,27 @@ module ::Redmine
         result
       end
 
+      # provide a list of all authors from BibTeX entries
+      # Provides +name+, +firstname+, +lastname+ (html) and +author+ (LaTex),
+      # where +name+ and +author+ are composed of 'firstname lastname'.      
+      # +is_last+ is +true+ for the last author (delimiter)
+      def Textile.list_bibtex_authors
+        authors=Textile.bibdata.authors
+        erb_template=Textile.bibtemplates['authors']
+        raise %q('authors' template missing) if !erb_template
+        template=ERB.new(erb_template,nil,'<>')
+        result=''
+        authors.each_with_index do |author,i|
+          name=BibTeX.latex2html(author)
+          names=name.split
+          firstname=names[0..names.size-2].join(' ').strip
+          lastname=names[-1].strip
+          is_last=i+1<authors.size ? false : true
+          result << template.result(binding)                   
+        end
+        result
+      end
+
       private
       
       # read bibtext data: initalize database @@bibdata
@@ -236,6 +258,12 @@ module ::Redmine
       desc "Show list of all BibTeX entries"
       macro :list_bibliography do |obj,args|
         WikiFormatting::Textile.list_bibtex_entries
+      end
+
+      desc "Show list of all authors"
+      macro :list_bibtex_authors do |obj,args|
+        #args, options = extract_macro_options(args, :delimiter)
+        WikiFormatting::Textile.list_bibtex_authors
       end
   end
 
