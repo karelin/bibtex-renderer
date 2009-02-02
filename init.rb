@@ -25,7 +25,9 @@ module ::Redmine
         RULES = [ :inline_cite, 
                   :inline_bibitem, :inline_shortbibitem,
                   :inline_putbib
-                ]+RULES                    
+                ]+RULES
+
+        # better insert to rules? (check for existence)
 
         #def to_html(*rules, &block) # replaces original version
         #  @toc = []
