@@ -29,6 +29,7 @@ module ::Redmine
 
         # better insert to rules? (check for existence)
 
+
         #def to_html(*rules, &block) # replaces original version
         #  @toc = []
         #  @macros_runner = block
@@ -57,7 +58,11 @@ module ::Redmine
           text.gsub!(pattern) do 
             items=$1
             if items =~ /\=\>/
-              options=eval("{#{items}}",binding) # Is this safe?
+              begin
+                options=eval("{#{items}}",binding) # Is this safe?
+              rescue => e
+                raise "invalid query: '#{e}'"
+              end
               entries=Textile.bibdata.query(options)
             else
               entries=items.split(',').map do |key|
