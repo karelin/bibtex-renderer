@@ -24,7 +24,7 @@ module ::Redmine
       class Formatter < RedCloth3
         
         RULES = [ :inline_cite, 
-                  :inline_bibitem, :inline_shortbibitem,
+                  :inline_bibitem, :inline_shortbibitem, :inline_bibtex,
                   :inline_putbib
                 ]+RULES
 
@@ -87,7 +87,7 @@ module ::Redmine
           subs('bibitem','<p>',BIBTEX_BIBITEM_RE,text)
         end
 
-         BIBTEX_SHORTBIBITEM_RE = /
+        BIBTEX_SHORTBIBITEM_RE = /
                     !shortbibitem\{
                     ([^}]+)
                     \}  
@@ -96,6 +96,17 @@ module ::Redmine
         def inline_shortbibitem(text)
           subs('shortbibitem','<p>',BIBTEX_SHORTBIBITEM_RE,text)
         end                      
+
+        BIBTEX_BIBTEX_RE = /
+                    !bibtex\{
+                    ([^}]+)
+                    \}  
+                   /mx unless const_defined?(:BIBTEX_BIBTEX_RE)
+        
+        def inline_bibtex(text)
+          subs('bibtex','<p>',BIBTEX_BIBTEX_RE,text)
+        end
+
 
         @@lock_collect = Mutex.new
         @@collect_cite = {}
@@ -146,7 +157,7 @@ module ::Redmine
 
             render(template_id,entries,'<p>')
           end
-        end
+        end        
 
 
       end # Formatter

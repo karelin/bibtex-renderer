@@ -1,0 +1,5 @@
+<%# template for !bibtex{} %>
+<tt><%= entry.to_bib.
+	sub(/\{(.*),/,'{<strong>\1</strong>,').	
+	gsub(/\n/,'<br> ').
+	gsub(/(<br>\s*)([^=]+=)/,'\1&emsp;&emsp;<strong>\2</strong>') %></tt>
