@@ -1,0 +1,5 @@
+<%# default template for !putpbib{} %>
+[<a name="<%= entry['$id']%>"><b><%= eval('"#{i+1}"',caller)%></b></a>]
+<%= bbl_authors %><br>
+<em><%= bbl_title %></em><br>
+<%= bbl_remainder.join("\n").gsub("/n",'<br>') %><br>

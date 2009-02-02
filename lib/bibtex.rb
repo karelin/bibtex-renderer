@@ -631,7 +631,7 @@ END
     # - erb_template an ERB object or a string defining an ERB template
     # The method defines variables +bbl+, +bbl_authors+, +bbl_title+,
     # +bbl_remainder+ from +entry['$bbl'].
-    def html(entry,erb_template=DEFAULT_TEMPLATE)      
+    def html(entry,erb_template=DEFAULT_TEMPLATE,caller=binding)      
       if erb_template.kind_of?(ERB)
         template=erb_template
       else       
@@ -645,7 +645,7 @@ END
         bbl_authors=bbl[0]
         bbl_title=bbl[1]
         bbl_remainder=bbl[2,bbl.length]
-      end     
+      end      
       template.result(binding)
     end
 

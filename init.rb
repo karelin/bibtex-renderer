@@ -1,4 +1,5 @@
 require 'redmine'
+require 'thread'
 
 # redmine/vendor/plugins/redmine_latex/init.rb
 
@@ -21,13 +22,10 @@ module ::Redmine
     module Textile
       class Formatter < RedCloth3
         
-        #MYRULES = [ :inline_cite, :inline_bibitem ] + RULES
-        RULES = [ :inline_cite, :inline_bibitem ]+RULES
-        #MYRULES = RULES
-
-        #
-        # DO WE REQUIRE AN ALIAS? -- conflicts with latex
-        # 
+        RULES = [ :inline_cite, 
+                  :inline_bibitem, :inline_shortbibitem,
+                  :inline_putbib
+                ]+RULES                    
 
         #def to_html(*rules, &block) # replaces original version
         #  @toc = []
@@ -36,19 +34,25 @@ module ::Redmine
         #end
         
         private
-
-        # query
-
-        # entry.to_bib
-
-        BIBTEX_BIBITEM_RE = /
-                    !bibitem\{
-                    ([^}]+)
-                    \}  
-                   /mx unless const_defined?(:BIBTEX_BIBITEM_RE)
         
-        def inline_bibitem(text)
-          text.gsub!(BIBTEX_BIBITEM_RE) do 
+        # render Array entries using template_id and delimiter
+        def render(template_id,entries,delimiter)
+          template=Textile.bibtemplates[template_id] || 
+            BibTeX::Renderer::DEFAULT_TEMPLATE
+
+          renderer=BibTeX::Renderer.new(Textile.bibdata)
+            
+          result=''
+          entries.each_with_index do |entry,i|           
+            result << renderer.html(entry,template,binding)
+            result << delimiter if i+1<entries.size
+          end         
+          result          
+        end
+
+        # substitute patttern in text using render
+        def subs(template_id,delimiter,pattern,text)
+          text.gsub!(pattern) do 
             items=$1
             if items =~ /\=\>/
               options=eval("{#{items}}",binding) # Is this safe?
@@ -61,18 +65,32 @@ module ::Redmine
               end
             end
 
-            # ... make this a function ...
-            template=Textile.bibtemplates['bibitem'] || BibTeX::Renderer.DEFAULT_TEMPLATE
-            renderer=BibTeX::Renderer.new(Textile.bibdata)
-            
-            result=''
-            entries.each do |entry|              
-              result << renderer.html(entry,template)
-              result << '<p>' # TEMPLATE
-            end         
-            result
+            render(template_id,entries,delimiter)
           end
         end
+
+        BIBTEX_BIBITEM_RE = /
+                    !bibitem\{
+                    ([^}]+)
+                    \}  
+                   /mx unless const_defined?(:BIBTEX_BIBITEM_RE)
+        
+        def inline_bibitem(text)
+          subs('bibitem','<p>',BIBTEX_BIBITEM_RE,text)
+        end
+
+         BIBTEX_SHORTBIBITEM_RE = /
+                    !shortbibitem\{
+                    ([^}]+)
+                    \}  
+                   /mx unless const_defined?(:BIBTEX_SHORTBIBITEM_RE)
+        
+        def inline_shortbibitem(text)
+          subs('shortbibitem','<p>',BIBTEX_SHORTBIBITEM_RE,text)
+        end                      
+
+        @@lock_collect = Mutex.new
+        @@collect_cite = {}
 
         BIBTEX_CITE_RE = /
                     !cite\{
@@ -80,9 +98,48 @@ module ::Redmine
                     \}  
                    /mx unless const_defined?(:BIBTEX_CITE_RE)
         
-        def inline_cite(items)
-          #raise 'not implemented'
+        def inline_cite(text)
+          text.gsub!(BIBTEX_CITE_RE) do                       
+            entries=$1.split(',').map do |key|
+              entry=Textile.bibdata[key]
+              raise "unknown BibTeX entry '#{key}'" if entry.nil?
+              entry           
+            end                            
+    
+            n=@@lock_collect.synchronize do
+              list=@@collect_cite[Thread.current] || []      
+              @@collect_cite[Thread.current]=list+entries
+              list.size+1
+            end
+
+            result='['
+            entries.each_with_index do |entry,i|
+              result << ('<a href="#%s"><b>%d</b></a>' % [entry['$id'],n])
+              n+=1
+              result << ',' if i+1<entries.size              
+            end
+            result << ']'
+          end
         end
+
+        BIBTEX_PUTBIB_RE = /
+                    !putbib\{
+                    ([^}]*)
+                    \}  
+                   /mx unless const_defined?(:BIBTEX_PUTBIB_RE)
+        
+        def inline_putbib(text)
+          text.gsub!(BIBTEX_PUTBIB_RE) do                       
+            template_id=$1.empty? ? 'putbib' : $1
+
+            entries= @@lock_collect.synchronize do
+              @@collect_cite.delete(Thread.current)
+            end        
+
+            render(template_id,entries,'<p>')
+          end
+        end
+
 
       end # Formatter
 
