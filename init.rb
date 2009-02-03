@@ -98,6 +98,7 @@ module ::Redmine
               render(template_id,entries,delimiter)
             end          
           rescue => e
+debugger
             "<div class=\"flash error\">Error executing the <strong>#!bibitem{#{template_id}##{text}}</strong> macro (#{e})</div>"
           end
         end

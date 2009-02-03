@@ -419,7 +419,7 @@ module BibTeX
                 'series','volume','number',
                 'publisher',
                 'address','month','year','pages',
-                'organization','type','isbn','paddress','abstract' ]               
+                'organization','type','isbn','paddress','note','abstract' ]               
 
       # predicate to to_bib (using ORDER)
       def sort_predicate(a,b)
@@ -442,18 +442,23 @@ module BibTeX
       # options is a Hash:
       # - :suppress => [] # array of keys to suppress
       # - :sort_predicate => predicate
+      # - :sort use default sort_predicate if +:sort_predicate=>nil+ (igrnored otherwise)
       def to_bib(options={ :sort_predicate => lambda {|a,b| sort_predicate(a,b)} })
         suppress=options[:suppress] || []
         bib="#{self['$type']}{#{self['$id']},\n"
-        bibtex=self.to_a
-        if options.has_key?(:sort_predicate)
-          pred=options[:sort_predicate]
-          bibtex=bibtex.sort do |a,b| pred.call(a[0],b[0]) end
+
+        bibtex=self.to_a       
+        pred=options[:sort_predicate]       
+        pred=(lambda {|a,b| sort_predicate(a,b)}) if !pred && options.has_key?(:sort)
+
+        if pred
+          bibtex=bibtex.sort { |a,b| pred.call(a[0],b[0]) }
         end
         bibtex.each do |key,value|
-          bib+=" #{key}={#{value}},\n" if (!(key=~/\A\$/) && !suppress.include?(key))
+          bib << " #{key}={#{value}},\n" if (!(key=~/\A\$/) && !suppress.include?(key))
         end
-        bib+="}\n"
+
+        bib << "}\n"
       end            
 
       # get author names ("firstname lastname") as array      
@@ -464,6 +469,7 @@ module BibTeX
       end           
 
     end # Entry    
+
     
     def initialize(input=nil)
       @timestamp=0
@@ -501,7 +507,7 @@ module BibTeX
     def make_bibfile(filename)
       File.open(filename,'w+') do |f|
         self.each_value do |e|
-          f.puts e.to_bib
+          f.puts e.to_bib({:suppress=>[],:sort_predicate=>nil})
         end
       end
       filename
