@@ -3,7 +3,7 @@ require 'thread'
 require 'erb'
 require 'tempfile'
 
-# redmine/vendor/plugins/redmine_latex/init.rb
+# redmine/vendor/plugins/bibtex_renderer/init.rb
 
 Redmine::Plugin.register :bibtex_renderer do
   name 'Redmine Bibtex plugin'
@@ -15,7 +15,7 @@ end
 require "#{RAILS_ROOT}/lib/redmine/wiki_formatting/macros"
 require "#{RAILS_ROOT}/vendor/plugins/bibtex-renderer/lib/bibtex.rb"
 
-                      
+BibTeX::BibTeXData.disable_predicates                   
 
 module ::Redmine   
 
@@ -241,6 +241,13 @@ module ::Redmine
 
       private
       
+      def Textile.check_file_permissions(file)
+        if (File.stat(file).mode & 037) != 0
+          BibTeX::log.warn "insecure permissions for '#{file}'"
+          raise "insecure permissions for '#{file}'"
+        end
+      end
+
       # read bibtext data: initalize database @@bibdata
       def Textile.read_bibtex_files
         @@bibdata=BibTeX::BibTeXData.new if !defined?(@@bibdata)
@@ -250,11 +257,10 @@ module ::Redmine
 
         return if !File.exist?(src_file)
           
-        if (File.stat(src_file).mode & 037) != 0
-          raise "insecure permissions for '#{src_file}'"
-        end
+        Textile.check_file_permissions(src_file)
 
         IO.readlines(src_file).each do |line|
+          next if line =~ /^\s*#/
           line=line.chomp.sub(/RAILS_ROOT/,RAILS_ROOT)
           BibTeX::log.info "will read from '#{line}'"  
           files=Dir.glob(line)
@@ -280,10 +286,15 @@ module ::Redmine
 
           BibTeX::log.info "reading template #{file}"       
           
-          if (File.stat(file).mode & 037) != 0
-            BibTeX::log.warn "insecure permissions for '#{file}' (ignored)"
+          begin
+            Textile.check_file_permissions(file)
+          rescue
+            BibTeX::log.warn "ignoring '#{file}' (using DEFAULT_TEMPLATE"
+            File.basename(file)=~/(.*)\.template\.erb/ # how to do this more elegantly?
+            name=$1
+            @@bibtemplates[name]=BibTeX::Renderer::DEFAULT_TEMPLATE
             next
-          end
+          end          
   
           text=IO.read(file)
           File.basename(file)=~/(.*)\.template\.erb/ # how to do this more elegantly?
