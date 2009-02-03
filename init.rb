@@ -96,10 +96,10 @@ module ::Redmine
               end
               
               render(template_id,entries,delimiter)
-            end
+            end          
+          rescue => e
+            "<div class=\"flash error\">Error executing the <strong>#!bibitem{#{template_id}##{text}}</strong> macro (#{e})</div>"
           end
-        rescue => e
-          "<div class=\"flash error\">Error executing the <strong>#!bibitem{#{template_id}##{text}}</strong> macro (#{e})</div>"
         end
 
         BIBTEX_BIBITEM_RE = /
