@@ -245,6 +245,20 @@ module ::Redmine
         result
       end
 
+      # provide a list of all bibtex templates     
+      def Textile.list_bibtex_templates
+        result=''
+        Textile.bibtemplates.each_pair do |key,value|
+          if value =~ /\A\s*<\%#([^%]*)%>/
+            info=$1.strip
+          else
+            info=''
+          end
+          result << "<b>#{key}</b> <em>#{info}</em><br>"
+        end
+        result
+      end
+
       private
       
       def Textile.check_file_permissions(file)
@@ -329,6 +343,11 @@ module ::Redmine
         WikiFormatting::Textile.initialize_bibtex_database
         raise "<b>DONE</b>: Re-read BibTeX data. Remove macro from document."
       end          
+
+      desc "Show list of all BibTeX templates"
+      macro :list_bibtex_templates do |obj,args|
+        WikiFormatting::Textile.list_bibtex_templates
+      end
 
       desc "Show list of all BibTeX entries"
       macro :list_bibliography do |obj,args|

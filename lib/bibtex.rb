@@ -707,12 +707,9 @@ end # BibTex
 =begin
 
 * config directory
-** bib-source: paths to files
-** templates as files in config directory
 ** generate author index
-** generate key index  
-* "restart" macro (nothing automatic)
-* read files with additional informatik
+** generate key index
+* read files with additional information (authors, general: ".attribute)
 * default links: ask google (define "person_link","title_link")
 
 =end
