@@ -24,14 +24,23 @@ module ::Redmine
     module Textile
       class Formatter < RedCloth3
         
-        RULES = [ :inline_cite, 
-                  :inline_bibitem, :inline_shortbibitem,  :inline_fancybibitem,
-                  :inline_bibtex,
-                  :inline_putbib
-                ]+RULES
+        RULES = [ :inline_bibtex ]+RULES
 
-        # better insert to rules? (check for existence)
-      
+        BIBTEX_RULES = 
+          [ :inline_bibitem,
+            :inline_bibtex_source,
+            :inline_cite, :inline_putbib
+          ]       
+              
+        def inline_bibtex(text)
+          begin             
+            BIBTEX_RULES.each do |rule|
+              text=self.method(rule).call(text)
+            end
+          rescue => e
+            text="<div class=\"flash error\">Error: #{e}</div>"
+          end          
+        end
         
         private
         
@@ -67,15 +76,17 @@ module ::Redmine
         end
 
         # substitute patttern in text using render
-        def subs(template_id,delimiter,pattern,text)
-          begin                            
-            text.gsub!(pattern) do 
-              items=$1
-              
+        def subs(template_id,delimiter,pattern,text)          
+          text.gsub!(pattern) do
+            all=$1.dup
+            items=$1
+            
+            begin
               if items =~ /(.*)#(.*)/
                   template_id,items = $1,$2
                 if !Textile.bibtemplates.has_key?(template_id)
-                  raise "unknown template '#{template_id}'" 
+                  raise "unknown template '#{template_id}'"
+                  next
                 end
               end
               
@@ -85,22 +96,23 @@ module ::Redmine
                   options=make_query(items) # less powerful but safe (w/o eval)
                 rescue => e
                   raise "invalid query: '#{e}'"
+                  next
                 end
                 entries=Textile.bibdata.query(options)
               else
                 entries=items.split(',').map do |key|
                   entry=Textile.bibdata[key]
-                  raise "unknown BibTeX entry '#{key}'" if entry.nil?
+                  raise "unknown BibTeX entry '#{key}'" if entry.nil?                  
                   entry
                 end
               end
-              
+
               render(template_id,entries,delimiter)
-            end          
-          rescue => e
-debugger
-            "<div class=\"flash error\">Error executing the <strong>#!bibitem{#{template_id}##{text}}</strong> macro (#{e})</div>"
-          end
+              
+            rescue => e
+              "<div class=\"flash error\"><b>#{e}</b> near #{all}</div>"
+            end                       
+          end                 
         end
 
         BIBTEX_BIBITEM_RE = /
@@ -111,27 +123,7 @@ debugger
         
         def inline_bibitem(text)
           subs('bibitem','<p>',BIBTEX_BIBITEM_RE,text)
-        end
-
-        BIBTEX_SHORTBIBITEM_RE = /
-                    !shortbibitem\{
-                    ([^}]+)
-                    \}  
-                   /mx unless const_defined?(:BIBTEX_SHORTBIBITEM_RE)
-        
-        def inline_shortbibitem(text)
-          subs('shortbibitem','<p>',BIBTEX_SHORTBIBITEM_RE,text)
-        end    
-
-        BIBTEX_FANCYBIBITEM_RE = /
-                    !shortbibitem\{
-                    ([^}]+)
-                    \}  
-                   /mx unless const_defined?(:BIBTEX_FANCYBIBITEM_RE)
-        
-        def inline_fancybibitem(text)
-          subs('fancybibitem','<p>',BIBTEX_FANCYBIBITEM_RE,text)
-        end    
+        end           
 
         BIBTEX_BIBTEX_RE = /
                     !bibtex\{
@@ -139,7 +131,7 @@ debugger
                     \}  
                    /mx unless const_defined?(:BIBTEX_BIBTEX_RE)
         
-        def inline_bibtex(text)
+        def inline_bibtex_source(text)
           subs('bibtex','<p>',BIBTEX_BIBTEX_RE,text)
         end
 
@@ -154,13 +146,14 @@ debugger
                    /mx unless const_defined?(:BIBTEX_CITE_RE)
         
         def inline_cite(text)
-          begin
-            text.gsub!(BIBTEX_CITE_RE) do                       
+          text.gsub!(BIBTEX_CITE_RE) do
+            begin
+              all=$~
               entries=$1.split(',').map do |key|
                 entry=Textile.bibdata[key]
-                raise "unknown BibTeX entry '#{key}'" if entry.nil?
+                raise "unknown BibTeX entry '#{key}'" if entry.nil?             
                 entry           
-              end                            
+              end                                        
               
               n=@@lock_collect.synchronize do
                 list=@@collect_cite[Thread.current] || []      
@@ -175,10 +168,10 @@ debugger
                 result << ',' if i+1<entries.size              
               end
               result << ']'
+            rescue => e              
+              "<div class=\"flash error\"><b>#{e}</b> near #{all}</div>"
             end
-          rescue => e
-            "<div class=\"flash error\">Error executing <strong>!cite{#{text}}</strong> macro (#{e})</div>"
-          end
+          end       
         end
 
         BIBTEX_PUTBIB_RE = /
@@ -188,19 +181,19 @@ debugger
                    /mx unless const_defined?(:BIBTEX_PUTBIB_RE)
         
         def inline_putbib(text)
-          begin
-            text.gsub!(BIBTEX_PUTBIB_RE) do                       
-              template_id=$1.empty? ? 'putbib' : $1
-              
-              entries= @@lock_collect.synchronize do
-                @@collect_cite.delete(Thread.current)
-              end        
-              
+          text.gsub!(BIBTEX_PUTBIB_RE) do                       
+            template_id=$1.empty? ? 'putbib' : $1
+            
+            entries=@@lock_collect.synchronize do
+              @@collect_cite.delete(Thread.current)
+            end        
+                        
+            if entries.nil? 
+              '<div class="flash warning">Empty bibliography (no !cite{} for !putbib{}).</div>' 
+            else 
               render(template_id,entries,'<p>')
             end
-          rescue => e
-            "<div class=\"flash error\">Error executing the <strong>!putbib{}</strong> macro (#{e})</div>"
-          end
+          end         
         end        
 
 
