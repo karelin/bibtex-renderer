@@ -219,7 +219,7 @@ module ::Redmine
         entries=@@bibdata.values.sort { |a,b| a['author'] <=>b['author'] }
         # Note: this is not the sorting we want...
                 
-        template=Textile.bibtemplates['list'] || BibTeX::Renderer.DEFAULT_TEMPLATE
+        template=Textile.bibtemplates['list'] || BibTeX::Renderer::DEFAULT_TEMPLATE
         renderer=BibTeX::Renderer.new(Textile.bibdata)
             
         result=''
@@ -261,7 +261,7 @@ module ::Redmine
       end
 
       # read bibtext data: initalize database @@bibdata
-      def Textile.read_bibtex_files
+      def Textile.read_bibtex_files       
         @@bibdata=BibTeX::BibTeXData.new if !defined?(@@bibdata)
         BibTeX::log.info "read_bibtex_files"  
                 
