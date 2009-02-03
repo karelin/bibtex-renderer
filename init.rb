@@ -1,6 +1,7 @@
 require 'redmine'
 require 'thread'
 require 'erb'
+require 'tempfile'
 
 # redmine/vendor/plugins/redmine_latex/init.rb
 
@@ -24,18 +25,13 @@ module ::Redmine
       class Formatter < RedCloth3
         
         RULES = [ :inline_cite, 
-                  :inline_bibitem, :inline_shortbibitem, :inline_bibtex,
+                  :inline_bibitem, :inline_shortbibitem,  :inline_fancybibitem,
+                  :inline_bibtex,
                   :inline_putbib
                 ]+RULES
 
         # better insert to rules? (check for existence)
-
-
-        #def to_html(*rules, &block) # replaces original version
-        #  @toc = []
-        #  @macros_runner = block
-        #  super(*MYRULES).to_s
-        #end
+      
         
         private
         
@@ -54,13 +50,38 @@ module ::Redmine
           result          
         end
 
+        @@lock_query=Mutex.new
+
+        # Generate query options (Hash) from items.
+        # This is simplified but does not use eval and is hence considered safe.
+        def make_query(items)
+          result={}
+          items.scan(/([^=]*)=>?([^,]*),?/) do          
+            key=$1.strip
+            value=$2
+            key=$1 if key =~ /'(.*)'/
+            value=$1 if value =~ /\/(.*)\//
+            result[key]=Regexp.new(value)
+          end
+          result
+        end
+
         # substitute patttern in text using render
         def subs(template_id,delimiter,pattern,text)
           text.gsub!(pattern) do 
             items=$1
-            if items =~ /\=\>/
-              begin
-                options=eval("{#{items}}",binding) # Is this safe?
+
+            if items =~ /(.*)#(.*)/
+              template_id,items = $1,$2
+              if !Textile.bibtemplates.has_key?(template_id)
+                raise "unknown template '#{template_id}'" 
+              end
+            end
+                     
+            if items =~ /\=\>/              
+              begin                                  
+                #options=eval("{#{items}}",binding) 
+                options=make_query(items) # less powerful but safe (w/o eval)
               rescue => e
                 raise "invalid query: '#{e}'"
               end
@@ -95,7 +116,17 @@ module ::Redmine
         
         def inline_shortbibitem(text)
           subs('shortbibitem','<p>',BIBTEX_SHORTBIBITEM_RE,text)
-        end                      
+        end    
+
+        BIBTEX_FANCYBIBITEM_RE = /
+                    !shortbibitem\{
+                    ([^}]+)
+                    \}  
+                   /mx unless const_defined?(:BIBTEX_FANCYBIBITEM_RE)
+        
+        def inline_fancybibitem(text)
+          subs('fancybibitem','<p>',BIBTEX_FANCYBIBITEM_RE,text)
+        end    
 
         BIBTEX_BIBTEX_RE = /
                     !bibtex\{
@@ -214,8 +245,16 @@ module ::Redmine
       def Textile.read_bibtex_files
         @@bibdata=BibTeX::BibTeXData.new if !defined?(@@bibdata)
         BibTeX::log.info "read_bibtex_files"  
-      
-        IO.readlines("#{RAILS_ROOT}/vendor/plugins/bibtex-renderer/config/source").each do |line|
+                
+        src_file=File.join(File.dirname(__FILE__),'/config/source')
+
+        return if !File.exist?(src_file)
+          
+        if (File.stat(src_file).mode & 037) != 0
+          raise "insecure permissions for '#{src_file}'"
+        end
+
+        IO.readlines(src_file).each do |line|
           line=line.chomp.sub(/RAILS_ROOT/,RAILS_ROOT)
           BibTeX::log.info "will read from '#{line}'"  
           files=Dir.glob(line)
@@ -234,10 +273,18 @@ module ::Redmine
         @@bibtemplates=Hash.new if !defined?(@@bibtemplates)
         BibTeX::log.info "read_bibtex_templates"        
        
-        files=Dir.glob("#{RAILS_ROOT}/vendor/plugins/bibtex-renderer/config/*.template.erb")
+        src_path=File.join(File.dirname(__FILE__),'/config/*.template.erb')
+
+        files=Dir.glob(src_path)
         files.each do |file|
 
-          BibTeX::log.info "reading template #{file}"  
+          BibTeX::log.info "reading template #{file}"       
+          
+          if (File.stat(file).mode & 037) != 0
+            BibTeX::log.warn "insecure permissions for '#{file}' (ignored)"
+            next
+          end
+  
           text=IO.read(file)
           File.basename(file)=~/(.*)\.template\.erb/ # how to do this more elegantly?
           name=$1

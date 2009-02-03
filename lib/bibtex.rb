@@ -412,13 +412,46 @@ module BibTeX
       # add a field
       def add_field(key,data)
         self[key]=data
-      end        
+      end
+
+      # order used by to_bib (if :predicate given)
+      ORDER = [ 'author','title','editor','booktitle','editor',
+                'series','volume','number',
+                'publisher',
+                'address','month','year','pages',
+                'organization','type','isbn','paddress','abstract' ]               
+
+      # predicate to to_bib (using ORDER)
+      def sort_predicate(a,b)
+        ia=ORDER.index(a)
+        ib=ORDER.index(b)
+        if ia.nil?
+          if ib.nil? then a <=> b else -1 end
+        elsif ib.nil?
+          +1
+        else
+          ia <=> ib
+        end
+      end
+
+      private :sort_predicate
+
+      # NOTE: This sorting on the fly is inefficient. 
       
       # restore BibTeX syntax from fields
-      def to_bib
+      # options is a Hash:
+      # - :suppress => [] # array of keys to suppress
+      # - :sort_predicate => predicate
+      def to_bib(options={ :sort_predicate => lambda {|a,b| sort_predicate(a,b)} })
+        suppress=options[:suppress] || []
         bib="#{self['$type']}{#{self['$id']},\n"
-        self.each do |key,value|         
-          bib+=" #{key}={#{value}},\n" if !(key=~/\A\$/)        
+        bibtex=self.to_a
+        if options.has_key?(:sort_predicate)
+          pred=options[:sort_predicate]
+          bibtex=bibtex.sort do |a,b| pred.call(a[0],b[0]) end
+        end
+        bibtex.each do |key,value|
+          bib+=" #{key}={#{value}},\n" if (!(key=~/\A\$/) && !suppress.include?(key))
         end
         bib+="}\n"
       end            
