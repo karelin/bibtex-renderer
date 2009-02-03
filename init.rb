@@ -68,34 +68,38 @@ module ::Redmine
 
         # substitute patttern in text using render
         def subs(template_id,delimiter,pattern,text)
-          text.gsub!(pattern) do 
-            items=$1
-
-            if items =~ /(.*)#(.*)/
-              template_id,items = $1,$2
-              if !Textile.bibtemplates.has_key?(template_id)
-                raise "unknown template '#{template_id}'" 
+          begin                            
+            text.gsub!(pattern) do 
+              items=$1
+              
+              if items =~ /(.*)#(.*)/
+                  template_id,items = $1,$2
+                if !Textile.bibtemplates.has_key?(template_id)
+                  raise "unknown template '#{template_id}'" 
+                end
               end
+              
+              if items =~ /\=\>/              
+                begin                                  
+                  #options=eval("{#{items}}",binding) 
+                  options=make_query(items) # less powerful but safe (w/o eval)
+                rescue => e
+                  raise "invalid query: '#{e}'"
+                end
+                entries=Textile.bibdata.query(options)
+              else
+                entries=items.split(',').map do |key|
+                  entry=Textile.bibdata[key]
+                  raise "unknown BibTeX entry '#{key}'" if entry.nil?
+                  entry
+                end
+              end
+              
+              render(template_id,entries,delimiter)
             end
-                     
-            if items =~ /\=\>/              
-              begin                                  
-                #options=eval("{#{items}}",binding) 
-                options=make_query(items) # less powerful but safe (w/o eval)
-              rescue => e
-                raise "invalid query: '#{e}'"
-              end
-              entries=Textile.bibdata.query(options)
-            else
-              entries=items.split(',').map do |key|
-                entry=Textile.bibdata[key]
-                raise "unknown BibTeX entry '#{key}'" if entry.nil?
-                entry
-              end
-            end
-
-            render(template_id,entries,delimiter)
           end
+        rescue => e
+          "<div class=\"flash error\">Error executing the <strong>#!bibitem{#{template_id}##{text}}</strong> macro (#{e})</div>"
         end
 
         BIBTEX_BIBITEM_RE = /
@@ -149,26 +153,30 @@ module ::Redmine
                    /mx unless const_defined?(:BIBTEX_CITE_RE)
         
         def inline_cite(text)
-          text.gsub!(BIBTEX_CITE_RE) do                       
-            entries=$1.split(',').map do |key|
-              entry=Textile.bibdata[key]
-              raise "unknown BibTeX entry '#{key}'" if entry.nil?
-              entry           
-            end                            
-    
-            n=@@lock_collect.synchronize do
-              list=@@collect_cite[Thread.current] || []      
-              @@collect_cite[Thread.current]=list+entries
-              list.size+1
+          begin
+            text.gsub!(BIBTEX_CITE_RE) do                       
+              entries=$1.split(',').map do |key|
+                entry=Textile.bibdata[key]
+                raise "unknown BibTeX entry '#{key}'" if entry.nil?
+                entry           
+              end                            
+              
+              n=@@lock_collect.synchronize do
+                list=@@collect_cite[Thread.current] || []      
+                @@collect_cite[Thread.current]=list+entries
+                list.size+1
+              end
+              
+              result='['
+              entries.each_with_index do |entry,i|
+                result << ('<a href="#%s"><b>%d</b></a>' % [entry['$id'],n])
+                n+=1
+                result << ',' if i+1<entries.size              
+              end
+              result << ']'
             end
-
-            result='['
-            entries.each_with_index do |entry,i|
-              result << ('<a href="#%s"><b>%d</b></a>' % [entry['$id'],n])
-              n+=1
-              result << ',' if i+1<entries.size              
-            end
-            result << ']'
+          rescue => e
+            "<div class=\"flash error\">Error executing <strong>!cite{#{text}}</strong> macro (#{e})</div>"
           end
         end
 
@@ -179,14 +187,18 @@ module ::Redmine
                    /mx unless const_defined?(:BIBTEX_PUTBIB_RE)
         
         def inline_putbib(text)
-          text.gsub!(BIBTEX_PUTBIB_RE) do                       
-            template_id=$1.empty? ? 'putbib' : $1
-
-            entries= @@lock_collect.synchronize do
-              @@collect_cite.delete(Thread.current)
-            end        
-
-            render(template_id,entries,'<p>')
+          begin
+            text.gsub!(BIBTEX_PUTBIB_RE) do                       
+              template_id=$1.empty? ? 'putbib' : $1
+              
+              entries= @@lock_collect.synchronize do
+                @@collect_cite.delete(Thread.current)
+              end        
+              
+              render(template_id,entries,'<p>')
+            end
+          rescue => e
+            "<div class=\"flash error\">Error executing the <strong>!putbib{}</strong> macro (#{e})</div>"
           end
         end        
 
