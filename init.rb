@@ -29,9 +29,13 @@ module ::Redmine
         BIBTEX_RULES = 
           [ :inline_bibitem,
             :inline_bibtex_source,
-            :inline_cite, :inline_putbib
+            :inline_cite, :inline_putbib,
+            :inline_bibliography
           ]       
               
+        private
+
+        # handle BibTeX rendering
         def inline_bibtex(text)
           begin             
             BIBTEX_RULES.each do |rule|
@@ -42,20 +46,26 @@ module ::Redmine
           end          
         end
         
-        private
-        
         # render Array entries using template_id and delimiter
+        # If delimiter=:single_template the template is expected to
+        # handle everything (from Array entries as input)!
         def render(template_id,entries,delimiter)
-          template=Textile.bibtemplates[template_id] || 
-            BibTeX::Renderer::DEFAULT_TEMPLATE
+          template=Textile.bibtemplates[template_id]
+          
+          raise "missing template '#{template_id}'" if template.nil?
 
           renderer=BibTeX::Renderer.new(Textile.bibdata)
-            
-          result=''
-          entries.each_with_index do |entry,i|           
-            result << renderer.html(entry,template,binding)
-            result << delimiter if i+1<entries.size
-          end         
+                     
+          if delimiter==:single_template
+            template=ERB.new(template,nil,'<>')            
+            result=template.result(binding)
+          else
+            result=''
+            entries.each_with_index do |entry,i|           
+              result << renderer.html(entry,template,binding)
+              result << delimiter if i+1<entries.size
+            end         
+          end
           result          
         end
 
@@ -67,16 +77,20 @@ module ::Redmine
           result={}
           items.scan(/([^=]*)=>?([^,]*),?/) do          
             key=$1.strip
-            value=$2
-            key=$1 if key =~ /'(.*)'/
-            value=$1 if value =~ /\/(.*)\//
+            value=$2.strip
+            if (key =~ /'(.*)'/) || (key =~ /"(.*)"/)
+              key=$1 
+            end
+            if value =~ /\/(.*)\//
+              value=$1
+            end
             result[key]=Regexp.new(value)
           end
           result
         end
 
         # substitute patttern in text using render
-        def subs(template_id,delimiter,pattern,text)          
+        def subs(template_id,delimiter,pattern,text)
           text.gsub!(pattern) do
             all=$1.dup
             items=$1
@@ -105,7 +119,7 @@ module ::Redmine
                   raise "unknown BibTeX entry '#{key}'" if entry.nil?                  
                   entry
                 end
-              end
+              end         
 
               render(template_id,entries,delimiter)
               
@@ -196,6 +210,16 @@ module ::Redmine
           end         
         end        
 
+        
+        BIBTEX_BIBLIOGRAPHY_RE = /
+                    !bibliography\{
+                    ([^}]+)
+                    \}  
+                   /mx unless const_defined?(:BIBTEX_BIBLIOGRAPHY_RE)
+        
+        def inline_bibliography(text)
+          subs('bibliography',:single_template,BIBTEX_BIBLIOGRAPHY_RE,text)
+        end   
 
       end # Formatter
 

@@ -1,0 +1,7 @@
+<%# example template for !bibliography{} %>
+<%= "<b>Rendered example for a bibliography template:</b> #{entries.size} items<p>" %>
+<% entries.each_with_index do |entry,i| %>
+<%= " (#{i+1}) " %>
+<%= entry['title'] %><br>
+<% end %>
+<p>
