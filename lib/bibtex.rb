@@ -673,7 +673,7 @@ END
     def html(entry,erb_template=DEFAULT_TEMPLATE,caller=binding)      
       if erb_template.kind_of?(ERB)
         template=erb_template
-      else       
+      else
         template=ERB.new(erb_template,nil,'<>')
       end
       if template.src =~ /bbl/
