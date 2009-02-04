@@ -341,7 +341,7 @@ module ::Redmine
       desc "Reread BibTeX database"
       macro :reread_bibtex_data do |obj,args|
         WikiFormatting::Textile.initialize_bibtex_database
-        raise "<b>DONE</b>: Re-read BibTeX data. Remove macro from document."
+        "<div class=\"flash notice\">Re-read BibTeX data. <em>Remove macro from document</em>.</div>"
       end          
 
       desc "Show list of all BibTeX templates"
