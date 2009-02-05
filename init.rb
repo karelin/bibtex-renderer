@@ -296,6 +296,7 @@ module ::Redmine
       def Textile.read_bibtex_files       
         @@bibdata=BibTeX::BibTeXData.new if !defined?(@@bibdata)
         BibTeX::log.info "read_bibtex_files"  
+        errors=nil
                 
         src_file=File.join(File.dirname(__FILE__),'/config/source')
 
@@ -310,12 +311,23 @@ module ::Redmine
           files=Dir.glob(line)
           files.each do |file|
             BibTeX::log.info "reading and parsing #{file}"  
-            text=IO.read(file)
-            @@bibdata.scan(text,file)
-            BibTeX::log.info "reading bbl file"             
+            begin
+              text=IO.read(file)            
+              @@bibdata.scan(text,file)
+            rescue => e
+              BibTeX::log.info "ERROR: #{e}"
+              errors||=true
+            end
           end          
         end
-        @@bibdata.ensure_bbl
+        BibTeX::log.info "reading bbl file" 
+        begin
+          @@bibdata.ensure_bbl
+        rescue => e
+          BibTeX::log.info "ERROR: #{e}"
+          errors||=true
+        end
+        errors
       end
 
       # read templates for bibtex rendering to @@bibtemplates
@@ -324,6 +336,7 @@ module ::Redmine
         BibTeX::log.info "read_bibtex_templates"        
        
         src_path=File.join(File.dirname(__FILE__),'/config/*.template.erb')
+        errors=nil
 
         files=Dir.glob(src_path)
         files.each do |file|
@@ -337,6 +350,7 @@ module ::Redmine
             File.basename(file)=~/(.*)\.template\.erb/ # how to do this more elegantly?
             name=$1
             @@bibtemplates[name]=BibTeX::Renderer::DEFAULT_TEMPLATE
+            errors||=true
             next
           end          
   
@@ -345,18 +359,21 @@ module ::Redmine
           name=$1
           @@bibtemplates[name]=text.freeze
         end
+        errors
       end
 
       public
 
       # initialization
       def Textile.initialize_bibtex_database
+        BibTeX::log.info "--- initializing BibTeXData ---"
         @@bibdata=BibTeX::BibTeXData.new
         @@bibtemplates=Hash.new
-        Textile.read_bibtex_files
-        Textile.read_bibtex_templates
+        errors=Textile.read_bibtex_files        
+        errors||=Textile.read_bibtex_templates
       end
 
+      BibTeX::log.info "--- initializing bibtex-renderer ---"
       Textile.initialize_bibtex_database
 
     end # Textile
@@ -364,8 +381,8 @@ module ::Redmine
     module Macros        
       desc "Reread BibTeX database"
       macro :reread_bibtex_data do |obj,args|
-        WikiFormatting::Textile.initialize_bibtex_database
-        "<div class=\"flash notice\">Re-read BibTeX data. <em>Remove macro from document</em>.</div>"
+        rv=WikiFormatting::Textile.initialize_bibtex_database        
+        "<div class=\"flash notice\">Re-read BibTeX data. #{rv ? '(Errors detected, see log file)' : ''}<em>Remove macro from document</em>.</div>"
       end          
 
       desc "Show list of all BibTeX templates"
