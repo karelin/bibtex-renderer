@@ -354,7 +354,8 @@ module ::Redmine
           
           begin
             Textile.check_file_permissions(file)
-          rescue
+          rescue => e
+            BibTeX::log.info "error #{e}"  
             BibTeX::log.warn "ignoring '#{file}' (using DEFAULT_TEMPLATE"
             File.basename(file)=~/(.*)\.template\.erb/ # how to do this more elegantly?
             name=$1
