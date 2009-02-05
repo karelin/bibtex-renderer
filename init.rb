@@ -381,8 +381,12 @@ module ::Redmine
     module Macros        
       desc "Reread BibTeX database"
       macro :reread_bibtex_data do |obj,args|
-        rv=WikiFormatting::Textile.initialize_bibtex_database        
-        "<div class=\"flash notice\">Re-read BibTeX data. #{rv ? '(Errors detected, see log file)' : ''}<em>Remove macro from document</em>.</div>"
+        if User.current.admin          
+          rv=WikiFormatting::Textile.initialize_bibtex_database        
+          "<div class=\"flash notice\">Re-read BibTeX data. #{rv ? '(Errors detected, see log file)' : ''}<em>Remove macro from document</em>.</div>"
+        else
+          "<div class=\"flash error\">Sorry, require admin status for re-reading BibTeX data.</div>"
+        end
       end          
 
       desc "Show list of all BibTeX templates"
