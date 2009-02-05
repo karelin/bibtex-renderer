@@ -1,0 +1,57 @@
+<h2>BibTex</h2>
+
+<% @entries.each_with_index do |entry,i| %>
+
+   <h3><%= BibTeX.latex2html(entry['title']) %></h3>
+
+   <%# MAKE THE FOLLOWING A HELPER! -- AND ENSURE BBL! %>
+
+   <% if entry.has_key?('$bbl') %>
+   <%	   
+        bbl=BibTeX.latex2html(entry['$bbl'])
+        bbl=bbl.sub(/^\\bibitem.*\n/,'')
+        bbl=bbl.split(/\\newblock\s+/).map { |line| line.strip }
+        bbl_authors=bbl[0]
+        bbl_title=bbl[1]
+        bbl_remainder=bbl[2,bbl.length]
+   %>  
+
+   <%= bbl_authors %><br>
+   <em><%= bbl_title %></em><br>
+   <%= bbl_remainder.join("\n").gsub("/n",'<br>') %>   	   
+
+   <% else %>
+
+   <%= BibTeX.latex2html(entry.authors) %><br>
+   <%= BibTeX.latex2html(entry['title']) %> <br>     
+
+   <% end %>
+   
+   <h4>Abstract</h4>		    
+
+   <%= if entry.has_key?('abstract') 
+         BibTeX.latex2html(entry['abstract'])
+       else
+	 '<em>(no abstract available)</em>' 
+      end
+   %>
+
+   <h4>BibTex</h4>
+
+   <%= entry.to_bib({:suppress => ['abstract','paddress','isbn'],:sort=>nil}).
+              sub(/\{(.*),/,'{<strong>\1</strong>,').
+              gsub(/\n/,'<br> ').
+              gsub(/(<br>\s*)([^=]+=)/,'\1&emsp;&emsp;<strong>\2</strong>') %>
+  
+<% end %>
+
+
+<% content_for :header_tags do %>
+    <%= javascript_include_tag 'context_menu' %>
+    <%= stylesheet_link_tag 'context_menu' %>
+<% end %>
+
+<div id="context-menu" style="display: none;"></div>
+<%= javascript_tag "new ContextMenu('#{url_for(:controller => 'issues', :action => 'context_menu')}')" %>
+
+<% html_title('BibTex') -%>

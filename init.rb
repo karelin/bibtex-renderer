@@ -31,7 +31,7 @@ module ::Redmine
             :inline_bibtex_source,
             :inline_cite, :inline_putbib,
             :inline_bibliography
-          ]       
+          ]               
               
         private
 
@@ -71,24 +71,6 @@ module ::Redmine
 
         @@lock_query=Mutex.new
 
-        # Generate query options (Hash) from items.
-        # This is simplified but does not use eval and is hence considered safe.
-        def make_query(items)
-          result={}
-          items.scan(/([^=]*)=>?([^,]*),?/) do          
-            key=$1.strip
-            value=$2.strip
-            if (key =~ /'(.*)'/) || (key =~ /"(.*)"/)
-              key=$1 
-            end
-            if value =~ /\/(.*)\//
-              value=$1
-            end
-            result[key]=Regexp.new(value)
-          end
-          result
-        end
-
         # substitute patttern in text using render
         def subs(template_id,delimiter,pattern,text)
           text.gsub!(pattern) do
@@ -107,7 +89,7 @@ module ::Redmine
               if items =~ /\=\>/              
                 begin                                  
                   #options=eval("{#{items}}",binding) 
-                  options=make_query(items) # less powerful but safe (w/o eval)
+                  options=Textile.make_query(items) # less powerful but safe (w/o eval)
                 rescue => e
                   raise "invalid query: '#{e}'"
                   next
@@ -223,13 +205,35 @@ module ::Redmine
 
       end # Formatter
 
-      
+
       def Textile.bibdata
         @@bibdata
       end
       
       def Textile.bibtemplates
         @@bibtemplates
+      end  
+      
+      # Generate query options (Hash) from items.
+      # This is simplified but does not use eval and is hence considered safe.
+      def Textile.make_query(items)
+        result={}
+        items.scan(/([^=]*)=>?([^,]*),?/) do          
+          key=$1.strip
+          value=$2.strip
+          if (key =~ /'(.*)'/) || (key =~ /"(.*)"/)
+              key=$1 
+          end
+          if value =~ /\/(.*)\//
+            value=$1
+          end
+          begin
+            result[key]=Regexp.new(value)
+          rescue => e
+            raise "failed to compile Regexp '#{value}'"
+          end
+        end
+        result
       end
 
       # provide a complete list of BibTeX entries
