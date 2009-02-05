@@ -306,7 +306,12 @@ module ::Redmine
 
         return if !File.exist?(src_file)
           
-        Textile.check_file_permissions(src_file)
+        begin
+          Textile.check_file_permissions(src_file)
+        rescue => e
+          BibTeX::log.info "ERROR: #{e}"
+          return true
+        end
 
         IO.readlines(src_file).each do |line|
           next if line =~ /^\s*#/
