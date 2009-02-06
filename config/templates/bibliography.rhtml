@@ -1,0 +1,11 @@
+<%# example template for !bibliography{} %>
+<%= "<b>Rendered example for a bibliography template:</b> #{entries.size} items<p>" %>
+<% entries.each_with_index do |entry,i| %>
+<%= " (#{i+1}) " %>
+<%= entry['title'] %>
+<a name="bibtex-<%=entry['$id']%>" onclick="w=window.open('/bibtex/show?id=<%=entry['$id']%>', 'BibTex','resizable=yes, location=no, width=640, height=480,menubar=no, status=no, scrollbars=yes, toolbar=no'); w.focus(); return false;">
+[BibTex]
+</a>
+<br>
+<% end %>
+
