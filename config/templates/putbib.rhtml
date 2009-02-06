@@ -1,17 +1,3 @@
 <%# default template for !putpbib{} %>
-[<a name="<%= entry['$id']%>"><b><%= eval('"#{i+1}"',caller)%></b></a>]
-<%= bbl_authors %><br>
-<em><%= bbl_title %></em><br>
-<%= bbl_remainder.join("\n").gsub("/n",'<br>') %>
-
-<a name="bibtex-<%=entry['$id']%>" onclick="w=window.open('/bibtex/show?id=<%=entry['$id']%>', 'BibTex','resizable=yes, location=no, width=640, height=480,menubar=no, status=no, scrollbars=yes, toolbar=no'); w.focus(); return false;">
-[BibTex]
-</a>
-
-<% if entry.has_key?('abstract') %>
-<a name="abstract-<%=entry['$id']%>" href="/bibtex/abstract?id=<%=entry['$id']%>">
-[abstract]
-</a>
-<% end %>
-
-<br>
+[<a name="<%= entry['$id']%>"><b><%=eval('i+1',caller_binding)%></b></a>]
+<%= render('bibitem',entry) %>

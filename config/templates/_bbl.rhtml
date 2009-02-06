@@ -1,0 +1,3 @@
+<%# partial for rendering bbl data %>
+<%= render('_bbl_authors_title',entry) %>
+<%= entry.bbl_remainder.join("\n").gsub("/n",'<br>') %>

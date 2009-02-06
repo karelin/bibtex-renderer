@@ -27,14 +27,13 @@
 
    <% end %>
    
+   <% if entry.has_key?('abstract') %>
+
    <h4>Abstract</h4>		    
 
-   <%= if entry.has_key?('abstract') 
-         BibTeX.latex2html(entry['abstract'])
-       else
-	 '<em>(no abstract available)</em>' 
-      end
-   %>
+   <%= BibTeX.latex2html(entry['abstract']) %>
+
+   <% end %>
 
    <h4>BibTex</h4>
 

@@ -13,14 +13,14 @@ class BibtexController < ApplicationController
          :only => [:add_block, :remove_block, :order_blocks]
 
   def index   
-    @entries=::Redmine::WikiFormatting::Textile::bibdata.
+    @entries=BibTextile::bibdata.
       values.sort { |a,b| a['author'] <=>b['author'] }
 
     render :action => 'show'
   end
   
   def show
-    entry=::Redmine::WikiFormatting::Textile::bibdata[params[:id]]
+    entry=BibTextile::bibdata[params[:id]]
     if !entry
       flash[:error]="Uknown BibTeX entry '#{params[:id]}'."
       @entries=[]
@@ -31,8 +31,8 @@ class BibtexController < ApplicationController
 
   def query
     begin 
-      options=::Redmine::WikiFormatting::Textile.make_query(params[:id])
-      @entries=::Redmine::WikiFormatting::Textile::bibdata.query(options)
+      options=BibTextile.make_query(params[:id])
+      @entries=BibTextile::bibdata.query(options)
     rescue => e
       flash[:error]="Invalid query '#{params[:id]}' (#{e})."
       @entries=[]
@@ -41,7 +41,7 @@ class BibtexController < ApplicationController
   end
 
   def abstract
-    entry=::Redmine::WikiFormatting::Textile::bibdata[params[:id]]
+    entry=BibTextile::bibdata[params[:id]]
     if !entry
       flash[:error]="Uknown BibTeX entry '#{params[:id]}'."
       @entries=[]

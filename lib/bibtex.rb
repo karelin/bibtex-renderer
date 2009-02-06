@@ -470,7 +470,33 @@ module BibTeX
         self['author'].split(' and ').map do |author| 
           author.split(',').reverse.join(' ').strip 
         end
-      end           
+      end
+
+      # get bbl data as array (lines)
+      def bbl
+        if !defined?(@bbl)
+          raise "no field '$bbl'" if !self.has_key?('$bbl')
+          @bbl=BibTeX.latex2html(self['$bbl']).
+            sub(/^\\bibitem.*\n/,'').
+            split(/\\newblock\s+/).map { |line| line.strip }          
+        end
+        @bbl
+      end
+
+      # authos from bbl
+      def bbl_authors
+        bbl[0]
+      end
+
+      # title from bbl 
+      def bbl_title
+        bbl[1]
+      end
+
+      # remainder from bbl (not authors, title)
+      def bbl_remainder
+        bbl[2,bbl.length]
+      end
 
     end # Entry    
 
@@ -674,20 +700,11 @@ END
     # - erb_template an ERB object or a string defining an ERB template
     # The method defines variables +bbl+, +bbl_authors+, +bbl_title+,
     # +bbl_remainder+ from +entry['$bbl'].
-    def html(entry,erb_template=DEFAULT_TEMPLATE,caller=binding)      
+    def html(entry,erb_template=DEFAULT_TEMPLATE,caller_binding=binding)      
       if erb_template.kind_of?(ERB)
         template=erb_template
       else
         template=ERB.new(erb_template,nil,'<>')
-      end
-      if template.src =~ /bbl/
-        @db.ensure_bbl
-        bbl=BibTeX.latex2html(entry['$bbl'])
-        bbl=bbl.sub(/^\\bibitem.*\n/,'')
-        bbl=bbl.split(/\\newblock\s+/).map { |line| line.strip }
-        bbl_authors=bbl[0]
-        bbl_title=bbl[1]
-        bbl_remainder=bbl[2,bbl.length]
       end      
       template.result(binding)
     end

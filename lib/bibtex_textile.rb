@@ -85,7 +85,7 @@ module BibTextile
                    /mx unless const_defined?(:BIBTEX_PUTBIB_RE)
     
     def inline_putbib(text)
-      text.gsub!(BIBTEX_PUTBIB_RE) do                       
+      text.gsub!(BIBTEX_PUTBIB_RE) do                    
         template_id=$1.empty? ? 'putbib' : $1
         
         entries=@@lock_collect.synchronize do
@@ -93,9 +93,13 @@ module BibTextile
         end        
         
         if entries.nil? 
-          '<div class="flash warning">Empty bibliography (no !cite{} for !putbib{}).</div>' 
-        else 
-          Bib::render(template_id,entries,'<p>')
+          '<div class="flash warning">Empty bibliography (no !cite{} for !putbib{}).</div>'
+        else          
+          begin
+            Bib::render(template_id,entries,'<p>')
+          rescue => e
+            "<div class=\"flash error\"><b>#{e}</b> near putbib</div>"           
+          end
         end
       end         
     end        
@@ -110,13 +114,13 @@ module BibTextile
                    /mx unless const_defined?(:BIBTEX_BIBLIOGRAPHY_RE)
     
     def inline_bibliography(text)
-      Bib.subs('bibliography',:single_template,BIBTEX_BIBLIOGRAPHY_RE,text)
+      Bib::subs('bibliography',:single_template,BIBTEX_BIBLIOGRAPHY_RE,text)
     end
 
     private :inline_bibliography
 
     # helpers in own namespace
-    module Bib
+    module Bib            
 
       # render Array entries using template_id and delimiter
       # If delimiter=:single_template the template is expected to
@@ -124,7 +128,7 @@ module BibTextile
       def Bib.render(template_id,entries,delimiter)
         template=BibTextile.bibtemplates[template_id]
         
-        raise "missing template '#{template_id}'" if template.nil?
+        raise "missing template '#{template_id}'" if template.nil?          
 
         renderer=BibTeX::Renderer.new(BibTextile.bibdata)
         
@@ -185,7 +189,27 @@ module BibTextile
 
     end # module Bib
   end # module Formatter
-  
+
+  # helpers in templates
+  module RendererHelpers
+
+    # latex to html
+    def l2h(text)
+      BibTeX::latex2html(text)
+    end
+    
+    # render (partial) template
+    def render(template,*entries)
+      Formatter::Bib.render(template,entries,'')
+    end
+   
+    def open_window(path,title,text,name,w=640,h=480)
+      %Q[<a name="#{name}" onclick="w=window.open('#{path}', '#{title}','resizable=yes, location=no, width=#{w}, height=#{h},menubar=no, status=no, scrollbars=yes, toolbar=no'); w.focus(); return false;">
+#{text}
+</a>]     
+    end
+    
+  end # module RendererHelpers
 
   # BibTex::BibTeXData database
   def BibTextile.bibdata
@@ -379,3 +403,10 @@ module BibTextile
   end
 
 end # module BibTextile
+
+
+module BibTeX
+  class Renderer
+    include BibTextile::RendererHelpers
+  end
+end
