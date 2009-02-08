@@ -7,18 +7,10 @@
    <%# MAKE THE FOLLOWING A HELPER! -- AND ENSURE BBL! %>
 
    <% if entry.has_key?('$bbl') %>
-   <%	   
-        bbl=BibTeX.latex2html(entry['$bbl'])
-        bbl=bbl.sub(/^\\bibitem.*\n/,'')
-        bbl=bbl.split(/\\newblock\s+/).map { |line| line.strip }
-        bbl_authors=bbl[0]
-        bbl_title=bbl[1]
-        bbl_remainder=bbl[2,bbl.length]
-   %>  
-
-   <%= bbl_authors %><br>
-   <em><%= bbl_title %></em><br>
-   <%= bbl_remainder.join("\n").gsub("/n",'<br>') %>   	   
+  
+   <%= entry.bbl_authors %><br>
+   <em><%= entry.bbl_title %></em><br>
+   <%= entry.bbl_remainder.join("\n").gsub("/n",'<br>') %>   	   
 
    <% else %>
 
