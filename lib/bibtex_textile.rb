@@ -479,9 +479,18 @@ module BibTeX
         if !defined?(@bbl_substituted_homepages)
           if rv[0] =~ BibTextile.homepages_pattern
             BibTextile.homepages.each do |hp|
-              if rv[0] =~ hp[0]               
-                rv[0].sub!($~[0],%Q("#{$~[0]}":#{hp[1]})) 
-                                #%Q(<a href="#{hp[1]}">#{$~[0]}</a>))
+              pattern=hp[0]
+              url=hp[1]
+              if rv[0] =~ hp[0]
+                matched=$&
+                #if url=~/http:\/\/.+www\./
+                  #rv[0].sub!(matched,%Q("#{matched}":#{url}))
+                  # this is for disabling redmine/wiki_formatting/textile/formatter.rb#
+                  # inline_auto_link which gets confused by, e.g.,
+                  # "http://cg.www.techfak.uni-bielefeld.de/"
+                #else
+                  rv[0].sub!(matched,%Q(<a href="#{url}">#{matched}</a>))
+                #end
               end            
             end
           end
@@ -496,6 +505,31 @@ module BibTeX
   end
 end
 
+::Redmine::WikiFormatting::Textile::Formatter::AUTO_LINK_RE=
+  %r{
+                        (                          # leading text
+                          <\w+.*?>|                # leading HTML tag, or
+                          [^=<>!:'"/.]|   #'       # leading punctuation, (PATCH: added '.') or            
+                          ^                        # beginning of line
+                        )
+                        (
+                          (?:https?://)|           # protocol spec, or
+                          (?:s?ftps?://)|
+                          (?:www\.)                # www.*
+                        )
+                        (
+                          (\S+?)                   # url
+                          (\/)?                    # slash
+                        )
+                        ([^\w\=\/;\(\)]*?)               # post
+                        (?=<|\s|$)
+    }x
+
+
+#
+# how to avoid textile "recognizing" urls?
+# link_author --- make it a function
+#
 
 #
 # hp: read lastname initial(s) url
