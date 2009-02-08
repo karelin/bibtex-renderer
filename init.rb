@@ -56,7 +56,7 @@ module ::Redmine
     BibTeX::log.info "--- initializing bibtex-renderer ---"
     BibTextile.initialize_bibtex_database
 
-    module Macros        
+    module Macros             
       desc "Reread BibTeX database"
       macro :reread_bibtex_data do |obj,args|
         if User.current.admin          

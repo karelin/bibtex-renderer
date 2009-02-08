@@ -522,8 +522,8 @@ module BibTextile
                         (?=<|\s|$)
     }x
 
-  BibTeX::log.info "patched Formatter::AUTO_LINK_RE"
-  
+  BibTeX::log.info "patched Formatter::AUTO_LINK_RE"    
+
 end # module BibTextile
 
 
