@@ -1,29 +1,29 @@
-C[^,]+R(&ouml\;|oe?)ssl	http://wwwisg.cs.uni-magdeburg.de/isg/roessl.html
-C[^,]+Theobalt			http://cs.stanford.edu/people/theobalt
-E[^,]+Aguiar			http://www.mpi-inf.mpg.de/~edeaguia
-H[^,]+[^,]+P[^,]+Seidel		http://www.mpi-inf.mpg.de/~hpseidel
-M[^,]+Botsch			http://cg.www.techfak.uni-bielefeld.de/people/botsch.php
-M[^,]+Pauly			http://www.agg.ethz.ch/people/faculty/pauly
-L[^,]+Kobbelt			http://www-i8.informatik.rwth-aachen.de/index.php?id=4
-P[^,]+Alliez			http://www-sop.inria.fr/members/Pierre.Alliez/
-B[^,]+L(&eacute\;|e)vy 		http://alice.loria.fr/index.php/bruno-levy.html
-R[^,]+Zayer			http://alice.loria.fr/index.php/members.html
-S[^,]+Bischoff			http://www-i8.informatik.rwth-aachen.de/index.php?id=4
-M[^,]+Alexa			http://cg.cs.tu-berlin.de/~marc/
-O[^,]+Sorkine			http://www.cs.nyu.edu/~sorkine/
-D[^,]+Cohen-Or			http://www.cs.tau.ac.il/~dcor/
-A[^,]+Belyaev			http://www.eps.hw.ac.uk/~belyaev
-L[^,]+Buse			http://www-sop.inria.fr/galaad/buse/
-G[^,]+Elber			http://www.cs.technion.ac.il/~gershon/
-S[^,]+Hahmann			http://ljk.imag.fr/membres/Stefanie.Hahmann/
-I[^,]+Ivrissimtzis		http://www.dur.ac.uk/ioannis.ivrissimtzis/
-Z[^,]+Karni			http://www.hpl.hp.com/people/zachi_karni/
-D[^,]+Levin			http://www.cs.tau.ac.il/~levin/
-Y[^,]+Lipman			http://www.cs.tau.ac.il/~lipmanya/
-B[^,]+Mourrain			http://www-sop.inria.fr/galaad/mourrain/
-G[^,]+N(&uuml;|u)rnberger	http://www.math.uni-mannheim.de/~lsmath4
-F[^,]+Zeilfelder			http://www.math.uni-mannheim.de/~lsmath4
-C[^,]+Stoll			http://www.mpi-inf.mpg.de/~stoll/
-H{^,]+Theisel			http://wwwisg.cs.uni-magdeburg.de/isg/theisel.html
-T{^,]+Weinkauf			http://www.zib.de/mitarbeiter/mit.pl?email=weinkauf&language=de
-H{^,]+Yamauchi			http://www.mpi-inf.mpg.de/~hitoshi/
+R(&ouml\;|oe?)ssl	C\.|Ch\.|Christian	http://wwwisg.cs.uni-magdeburg.de/isg/roessl.html
+Theobalt		C\.|Ch\.|Christian	http://cs.stanford.edu/people/theobalt
+Aguiar			E\.|Edilson(\sde)?	http://www.mpi-inf.mpg.de/~edeaguia
+Seidel			H\.?-P\.|Hans-Peter	http://www.mpi-inf.mpg.de/~hpseidel
+Botsch			M\.|Mario		http://cg.www.techfak.uni-bielefeld.de/people/botsch.php
+Pauly			M\.|Mark		http://www.agg.ethz.ch/people/faculty/pauly
+Kobbelt			L\.(P\.)?|Leif(\s+P.)?	http://www-i8.informatik.rwth-aachen.de/index.php?id=4
+Alliez			P\.|Pierre		http://www-sop.inria.fr/members/Pierre.Alliez/
+L(&eacute\;|e)vy 	B\.|Bruno		http://alice.loria.fr/index.php/bruno-levy.html
+Zayer			R\.|Rhaleb		http://alice.loria.fr/index.php/members.html
+Bischoff		S\.|Stephan		http://www-i8.informatik.rwth-aachen.de/index.php?id=4
+Alexa			M\.|Marc		http://cg.cs.tu-berlin.de/~marc/
+Sorkine			O\.|Olga		http://www.cs.nyu.edu/~sorkine/
+Cohen-Or		D\.|Daniel		http://www.cs.tau.ac.il/~dcor/
+Belyaev			A\.|Alexander		http://www.eps.hw.ac.uk/~belyaev
+Buse			L\.|Laurent		http://www-sop.inria.fr/galaad/buse/
+Elber			G\.|Gershon		http://www.cs.technion.ac.il/~gershon/
+Hahmann			S\.|Stefanie		http://ljk.imag.fr/membres/Stefanie.Hahmann/
+Ivrissimtzis		I\.|Ioannis		http://www.dur.ac.uk/ioannis.ivrissimtzis/
+Karni			Z\.|Zachi		http://www.hpl.hp.com/people/zachi_karni/
+Levin			D\.|David		http://www.cs.tau.ac.il/~levin/
+Lipman			Y\.|Yaron		http://www.cs.tau.ac.il/~lipmanya/
+Mourrain		B\.|Bernard		http://www-sop.inria.fr/galaad/mourrain/
+N(&uuml;|u)rnberger	G\.|G(&uuml;|ue?)	http://www.math.uni-mannheim.de/~lsmath4
+Zeilfelder		F\.|Frank		http://www.math.uni-mannheim.de/~lsmath4
+Stoll			C\.|Carsten		http://www.mpi-inf.mpg.de/~stoll/
+Theisel			H\.|Holger		http://wwwisg.cs.uni-magdeburg.de/isg/theisel.html
+Weinkauf		T\.|Tino		http://www.zib.de/mitarbeiter/mit.pl?email=weinkauf&language=de
+Yamauchi		H\.|Hitoshi		http://www.mpi-inf.mpg.de/~hitoshi/

@@ -199,6 +199,11 @@ module BibTextile
       BibTeX::latex2html(t)
     end
     
+    # add links to homepages for any known persons (BibTextile.homepages)
+    def hp(text)
+      BibTextile.link_to_hompages(l2h(text))
+    end
+    
     # render (partial) template
     def render(template,*entries)
       Formatter::Bib.render(template,entries,'')
@@ -419,28 +424,8 @@ module BibTextile
     
     src_file=File.join(File.dirname(__FILE__),'/../config/homepages')
 
-    # include tag?
-
-    return nil if !File.exist?(src_file)
-        
-    BibTeX::log.info "reading #{src_file}"
-
     begin
-      BibTextile.check_file_permissions(src_file)
-      IO.readlines(src_file).each do |line|
-        next if line.strip.size==0 || line=~/^#/
-        pattern,url=line.split        
-        begin
-          r=Regexp.new(pattern);
-          raise 'invalid url' if !url =~ /^http:.*/
-        rescue => e
-          BibTeX::log.warning "'#{e}' ignoring '#{line}'"
-          errors=true
-        end
-        @@homepages << [r,url]
-        @@homepages_pattern=Regexp.union(homepages_pattern,r)
-      end
-      
+      errors||=BibTextile.read_homepage_file(src_file)      
     rescue => e      
       BibTeX::log.info "ERROR: #{e}"
       errors=true
@@ -449,6 +434,41 @@ module BibTextile
     errors
   end
 
+  # read a single file with author/homepage mapping
+  def BibTextile.read_homepage_file(fname)
+    return nil if !File.exist?(fname)     
+
+    errors=nil
+   
+    BibTeX::log.info "reading #{fname}"
+    
+    BibTextile.check_file_permissions(fname)
+    
+    IO.readlines(fname).each do |line|
+
+      next if line.strip.size==0 || line=~/^#/
+      
+      # include tag?
+
+      lastname,initials,url=line.split        
+
+      begin
+        rn=Regexp.new(lastname)
+        ri=Regexp.new(initials)        
+        raise 'invalid url' if !url =~ /^http:.*/
+        r=Regexp.union(Regexp.new("(#{ri.source})[^,]+(#{rn.source})"),
+                       Regexp.new("(#{rn.source})\s*,\s*(#{ri.source})"))
+
+        @@homepages << [r,url]
+        @@homepages_pattern=Regexp.union(homepages_pattern,r)
+      rescue => e
+        BibTeX::log.warn "'#{e}' ignoring '#{line}'"
+        errors=true
+      end      
+    end
+    errors
+  end
+    
   public
 
   # initialization
@@ -466,46 +486,23 @@ module BibTextile
     end
     errors
   end
-
-end # module BibTextile
-
-
-module BibTeX
-  class BibTeXData
-    class Entry
-      alias _bbl_html bbl_html
-      def bbl_html
-        rv=_bbl_html
-        if !defined?(@bbl_substituted_homepages)
-          if rv[0] =~ BibTextile.homepages_pattern
-            BibTextile.homepages.each do |hp|
-              pattern=hp[0]
-              url=hp[1]
-              if rv[0] =~ hp[0]
-                matched=$&
-                #if url=~/http:\/\/.+www\./
-                  #rv[0].sub!(matched,%Q("#{matched}":#{url}))
-                  # this is for disabling redmine/wiki_formatting/textile/formatter.rb#
-                  # inline_auto_link which gets confused by, e.g.,
-                  # "http://cg.www.techfak.uni-bielefeld.de/"
-                #else
-                  rv[0].sub!(matched,%Q(<a href="#{url}">#{matched}</a>))
-                #end
-              end            
-            end
-          end
-          @bbl_substituted_homepages=true
-        end
-        rv
+  
+  # apply substitutions in text to add links to homapages
+  def BibTextile.link_to_hompages(text)
+    if text =~ BibTextile.homepages_pattern            
+      BibTextile.homepages.each do |hp|
+        pattern=hp[0]
+        url=hp[1]
+        if text =~ hp[0]
+          matched=$&          
+          text.sub!(matched,%Q(<a href="#{url}">#{matched}</a>))
+        end            
       end
     end
+    text
   end
-  class Renderer
-    include BibTextile::RendererHelpers
-  end
-end
 
-::Redmine::WikiFormatting::Textile::Formatter::AUTO_LINK_RE=
+  ::Redmine::WikiFormatting::Textile::Formatter::AUTO_LINK_RE=
   %r{
                         (                          # leading text
                           <\w+.*?>|                # leading HTML tag, or
@@ -525,13 +522,34 @@ end
                         (?=<|\s|$)
     }x
 
+  BibTeX::log.info "patched Formatter::AUTO_LINK_RE"
+  
+end # module BibTextile
 
-#
-# how to avoid textile "recognizing" urls?
-# link_author --- make it a function
-#
 
-#
-# hp: read lastname initial(s) url
-#
-# -> create regxps
+
+module BibTeX
+  class BibTeXData
+    class Entry
+      # redefine bbl_html to apply BibTextile.link_to_hompages (cached)
+      alias _bbl_html bbl_html
+      def bbl_html
+        rv=_bbl_html
+        if !defined?(@bbl_substituted_homepages)
+          BibTextile.link_to_hompages(rv[0])
+          (1..rv.size-1).each do |i|
+            if rv[i]=~/editors/
+              BibTextile.link_to_hompages(rv[i])
+            end
+          end
+          @bbl_substituted_homepages=true
+        end
+        rv
+      end
+    end
+  end
+  class Renderer
+    include BibTextile::RendererHelpers
+  end
+end
+
