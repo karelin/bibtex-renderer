@@ -473,34 +473,36 @@ module BibTeX
       end
 
       # get bbl data as array (lines)
-      def bbl
-        if !defined?(@bbl)
+      def bbl_html
+        if !defined?(@bbl_html)
           raise "no field '$bbl'" if !self.has_key?('$bbl')
-          @bbl=BibTeX.latex2html(self['$bbl']).
+          @bbl_html=BibTeX.latex2html(self['$bbl']).
             sub(/^\\bibitem.*\n/,'').
             split(/\\newblock\s+/).map { |line| line.strip }          
         end
-        @bbl
+        @bbl_html
       end
 
       # authos from bbl
       def bbl_authors
-        bbl[0]
+        bbl_html[0]
       end
 
       # title from bbl 
       def bbl_title
-        bbl[1]
+        bbl_html[1]
       end
 
       # remainder from bbl (not authors, title)
       def bbl_remainder
-        bbl[2,bbl.length]
+        b=bbl_html
+        b[2,b.length]
       end
 
     end # Entry    
 
     
+    # call scan if +input+
     def initialize(input=nil)
       @timestamp=0
       @bbl_time=nil
@@ -560,7 +562,7 @@ module BibTeX
 \\end{document}
 END
       end
-
+     
       BibTeX.execute('cd %s ; %s -halt-on-error bibtexdata' % 
                      [BibTeX.tmpdir,@@latex]) do |info|
         if info[:status].exitstatus!=0

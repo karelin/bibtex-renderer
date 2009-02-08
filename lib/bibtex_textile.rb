@@ -1,6 +1,7 @@
 require 'thread'
 require 'erb'
 require 'tempfile'
+require 'pathname'
 require 'bibtex.rb'
 
 =begin
@@ -194,8 +195,8 @@ module BibTextile
   module RendererHelpers
 
     # latex to html
-    def l2h(text)
-      BibTeX::latex2html(text)
+    def l2h(text)     
+      BibTeX::latex2html(t)
     end
     
     # render (partial) template
@@ -208,6 +209,8 @@ module BibTextile
 #{text}
 </a>]     
     end
+
+    # xxx link_hp, link_... xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
     
   end # module RendererHelpers
 
@@ -219,7 +222,17 @@ module BibTextile
   # templates for rendering
   def BibTextile.bibtemplates
     @@bibtemplates
-  end  
+  end 
+
+  # authors' hompages (nested Array [Regexp, homepage url])
+  def BibTextile.homepages
+    @@homepages
+  end
+
+  # regular extression matching any author
+  def BibTextile.homepages_pattern
+    @@homepages_pattern
+  end
 
   # Generate query options (Hash) from items.
   # This is simplified but does not use eval and is hence considered safe.
@@ -297,10 +310,21 @@ module BibTextile
   private
 
   def BibTextile.check_file_permissions(file)
+=begin
     if (File.stat(file).mode & 037) != 0
       BibTeX::log.warn "insecure permissions for '#{file}'"
       raise "insecure permissions for '#{file}'"
     end
+=end
+    raise "insecure permissions for '#{file}'" if world_accessible?(file) 
+    true
+  end
+ 
+  def BibTextile.world_accessible?(file)    
+    Pathname.new(File.expand_path(file)).cleanpath(true).descend do |path|
+      return nil if File.stat(path).mode & 007==0     
+    end
+    true
   end
 
   # read bibtext data: initalize database @@bibdata
@@ -311,7 +335,7 @@ module BibTextile
     
     src_file=File.join(File.dirname(__FILE__),'/../config/source')
 
-    return if !File.exist?(src_file)
+    return nil if !File.exist?(src_file)
     
     begin
       BibTextile.check_file_permissions(src_file)
@@ -385,6 +409,46 @@ module BibTextile
     errors
   end
 
+  # read authors' homepages
+  def BibTextile.read_homepages     
+    @@homepages=[]
+    @@homepages_pattern=Regexp.union
+
+    BibTeX::log.info "read_homepages"  
+    errors=nil
+    
+    src_file=File.join(File.dirname(__FILE__),'/../config/homepages')
+
+    # include tag?
+
+    return nil if !File.exist?(src_file)
+        
+    BibTeX::log.info "reading #{src_file}"
+
+    begin
+      BibTextile.check_file_permissions(src_file)
+      IO.readlines(src_file).each do |line|
+        next if line.strip.size==0 || line=~/^#/
+        pattern,url=line.split        
+        begin
+          r=Regexp.new(pattern);
+          raise 'invalid url' if !url =~ /^http:.*/
+        rescue => e
+          BibTeX::log.warning "'#{e}' ignoring '#{line}'"
+          errors=true
+        end
+        @@homepages << [r,url]
+        @@homepages_pattern=Regexp.union(homepages_pattern,r)
+      end
+      
+    rescue => e      
+      BibTeX::log.info "ERROR: #{e}"
+      errors=true
+    end
+
+    errors
+  end
+
   public
 
   # initialization
@@ -394,6 +458,7 @@ module BibTextile
     @@bibtemplates=Hash.new
     errors=BibTextile.read_bibtex_files
     errors||=BibTextile.read_bibtex_templates
+    errors||=BibTextile.read_homepages
     if errors
       BibTeX::log.info "<<< errors while initializing BibTeXData ---"
     else
@@ -406,7 +471,33 @@ end # module BibTextile
 
 
 module BibTeX
+  class BibTeXData
+    class Entry
+      alias _bbl_html bbl_html
+      def bbl_html
+        rv=_bbl_html
+        if !defined?(@bbl_substituted_homepages)
+          if rv[0] =~ BibTextile.homepages_pattern
+            BibTextile.homepages.each do |hp|
+              if rv[0] =~ hp[0]               
+                rv[0].sub!($~[0],%Q("#{$~[0]}":#{hp[1]})) 
+                                #%Q(<a href="#{hp[1]}">#{$~[0]}</a>))
+              end            
+            end
+          end
+          @bbl_substituted_homepages=true
+        end
+        rv
+      end
+    end
+  end
   class Renderer
     include BibTextile::RendererHelpers
   end
 end
+
+
+#
+# hp: read lastname initial(s) url
+#
+# -> create regxps
