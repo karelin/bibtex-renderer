@@ -713,26 +713,8 @@ END
 
   end
  
-
-  # extensions:
-  # author info -> url bbl_html includes links
-  # paper/project -> url ...
-  # picture ...
-    
-  # extra info from file (comment, picture, url)
-    
-  # generate index (all publications, all authors) 
-  
+ 
 
 end # BibTex
 
 
-=begin
-
-* config directory
-** generate author index
-** generate key index
-* read files with additional information (authors, general: ".attribute)
-* default links: ask google (define "person_link","title_link")
-
-=end

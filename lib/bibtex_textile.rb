@@ -448,7 +448,7 @@ module BibTextile
 
       next if line.strip.size==0 || line=~/^#/
       
-      # include tag?
+      # Do we require an "include" directive to process multiple files recursively?
 
       lastname,initials,url=line.split        
 
@@ -468,6 +468,57 @@ module BibTextile
     end
     errors
   end
+
+  # read attributes to BibTex entries
+  def BibTextile.read_attributes   
+    BibTeX::log.info "read_attributes"        
+    
+    src_path=File.join(File.dirname(__FILE__),'../config/*.attr')
+    errors=nil
+
+    files=Dir.glob(src_path)
+    files.each do |file|
+
+      BibTeX::log.info "reading attributes #{file}"
+
+      name=nil
+      File.basename(file)=~/(.*)\.attr/ 
+      name="$#{$1}"
+      
+      begin
+        BibTextile.check_file_permissions(file)
+        append=false
+        IO.readlines(file).each do |line|
+          next if line.strip.length==0 || line =~ /^#/
+
+          if append
+            value << line
+          else
+            raise "syntax error near '#{line}'" if !(line =~ /^([^\s]+)\s+(.*)$/)
+            key=$1
+            value=$2
+          end
+          if value =~/(.*)\\$/ 
+            value=$1
+            append=true
+            next
+          end
+
+          entry=@@bibdata[key]
+          raise "unknown entry '#{key}'" if entry.nil?        
+          raise "atribute '#{name}' exists for entry '#{key}'" if entry.has_key?(name)
+          entry[name]=value
+          entry[name+'_src']=file
+        end
+      rescue => e
+        BibTeX::log.info "error #{e}"  
+        BibTeX::log.warn "ignoring '#{file}'"
+        errors||=true
+        next
+      end
+    end
+    errors
+  end
     
   public
 
@@ -479,6 +530,7 @@ module BibTextile
     errors=BibTextile.read_bibtex_files
     errors||=BibTextile.read_bibtex_templates
     errors||=BibTextile.read_homepages
+    errors||=BibTextile.read_attributes
     if errors
       BibTeX::log.info "<<< errors while initializing BibTeXData ---"
     else
@@ -501,6 +553,7 @@ module BibTextile
     end
     text
   end
+  
 
   ::Redmine::WikiFormatting::Textile::Formatter::AUTO_LINK_RE=
   %r{
@@ -535,14 +588,18 @@ module BibTeX
       alias _bbl_html bbl_html
       def bbl_html
         rv=_bbl_html
-        if !defined?(@bbl_substituted_homepages)
+        if !defined?(@bbl_substituted)
           BibTextile.link_to_hompages(rv[0])
-          (1..rv.size-1).each do |i|
+          (2..rv.size-1).each do |i|
             if rv[i]=~/editors/
               BibTextile.link_to_hompages(rv[i])
             end
           end
-          @bbl_substituted_homepages=true
+          
+          if self.has_key?('$download')
+            rv[1]=%Q(<a href="#{self['$download']}">#{rv[1]}</a>)
+          end
+          @bbl_substituted=true
         end
         rv
       end
