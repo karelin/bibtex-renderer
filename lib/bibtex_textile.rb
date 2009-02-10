@@ -100,10 +100,11 @@ module BibTextile
           begin
             Bib::render(template_id,entries,'<p>')
           rescue => e
-            "<div class=\"flash error\"><b>#{e}</b> near putbib</div>"           
+            text="<div class=\"flash error\"><b>#{e}</b> near putbib</div>"           
           end
         end
-      end         
+      end
+      text
     end        
 
     private :inline_putbib
@@ -184,9 +185,10 @@ module BibTextile
             render(template_id,entries,delimiter)
             
           rescue => e
-            "<div class=\"flash error\"><b>#{e}</b> near #{all}</div>"
+            text="<div class=\"flash error\"><b>#{e}</b> near #{all}</div>"
           end                       
-        end                 
+        end
+        text
       end
 
     end # module Bib
