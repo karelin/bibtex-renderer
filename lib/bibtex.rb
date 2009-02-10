@@ -472,6 +472,13 @@ module BibTeX
         end
       end
 
+      # get author names as nested array [ lastname, firstname ]    
+      def author_names
+        self['author'].split(' and ').map do |author| 
+          author.split(',').map { |a| a.strip }
+        end
+      end
+
       # get bbl data as array (lines)
       def bbl_html
         if !defined?(@bbl_html)

@@ -490,7 +490,7 @@ module BibTextile
         append=false
         IO.readlines(file).each do |line|
           next if line.strip.length==0 || line =~ /^#/
-
+            
           if append
             value << line
           else

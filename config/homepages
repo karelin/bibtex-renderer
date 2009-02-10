@@ -1,6 +1,6 @@
 R(&ouml\;|oe?)ssl	C\.|Ch\.|Christian	http://wwwisg.cs.uni-magdeburg.de/isg/roessl.html
 Theobalt		C\.|Ch\.|Christian	http://cs.stanford.edu/people/theobalt
-Aguiar			E\.|Edilson(\sde)?	http://www.mpi-inf.mpg.de/~edeaguia
+(de\s+)?Aguiar			E\.|Edilson(\sde)?	http://www.mpi-inf.mpg.de/~edeaguia
 Seidel			H\.?-P\.|Hans-Peter	http://www.mpi-inf.mpg.de/~hpseidel
 Botsch			M\.|Mario		http://cg.www.techfak.uni-bielefeld.de/people/botsch.php
 Pauly			M\.|Mark		http://www.agg.ethz.ch/people/faculty/pauly
@@ -44,5 +44,5 @@ Isenburg		M\.|Martin		http://people.llnl.gov/isenburg1
 Ahmed			N\.|Naveed		http://www.mpi-inf.mpg.de/~nahmed
 Ziegler			G\.|Gernot		http://www.lysator.liu.se/~gz/
 Annen			T\.|Tom|Thomas		http://www.mpi-inf.mpg.de/~tannen/
-Martinez( Esturo)?	J\.|Janick		http://wwwisg.cs.uni-magdeburg.de/isg/martinez
+Martinez(\s+Esturo)?	J\.|Janick		http://wwwisg.cs.uni-magdeburg.de/isg/martinez
 
