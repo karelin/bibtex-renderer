@@ -10,7 +10,6 @@ Redmine::Plugin.register :bibtex_renderer do
 end
 
 require "#{RAILS_ROOT}/lib/redmine/wiki_formatting/macros"
-#require "#{RAILS_ROOT}/vendor/plugins/bibtex-renderer/lib/bibtex_textile.rb"
 require File.join(File.dirname(__FILE__),'/lib/bibtex_textile.rb')
     
 

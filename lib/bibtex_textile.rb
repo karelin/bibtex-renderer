@@ -71,9 +71,10 @@ module BibTextile
           end
           result << ']'
         rescue => e              
-          "<div class=\"flash error\"><b>#{e}</b> near #{all}</div>"
+          text="<div class=\"flash error\"><b>#{e}</b> near #{all}</div>"
         end
-      end       
+      end 
+      text
     end
 
     private :inline_cite
