@@ -1,0 +1,19 @@
+<%# list of coauthors template for !bibliography{} %>
+
+<% authors=Hash.new(0)
+   entries.each do |entry| 
+     names=entry.author_names.map do |author|
+       [ BibTeX.latex2html(author[0]),BibTeX.latex2html(author[1]) ]
+     end
+     names.each do |name| 
+       authors[name]+=1 
+     end  
+   end
+   author_list=authors.keys.sort do |a,b|
+     a[0].downcase <=> b[0].downcase
+   end.
+   each do |author|
+%>
+<%= BibTextile.link_to_hompages("#{author[1]} #{author[0]} (#{authors[author]})<br>") %>
+<% end %>
+
