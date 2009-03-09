@@ -223,7 +223,7 @@ module BibTextile
     # render link for direct download of document (pdf,ps)
     def render_dl_doc(entry)
       output=''
-      template=File.join(RAILS_ROOT, "/public/files/#{entry['$id']downcase..gsub(':','-')}.%s")
+      template=File.join(RAILS_ROOT, "/public/files/#{entry['$id'].downcase.gsub(':','-')}.%s")
       ['pdf','pdf.gz','ps','ps.gz'].each do |ext|
         name=template % ext
         if File.exist?(name) 
