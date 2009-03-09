@@ -220,13 +220,26 @@ module BibTextile
       Formatter::Bib.render(template,entries,'')
     end
    
+    # render link for direct download of document (pdf,ps)
+    def render_dl_doc(entry)
+      output=''
+      template=File.join(RAILS_ROOT, "/public/files/#{entry['$id'].gsub(':','-')}.%s")
+      ['pdf','pdf.gz','ps','ps.gz'].each do |ext|
+        name=template % ext
+        if File.exist?(name) 
+          output << '&nbsp;' if output.length>0
+          output << %Q(<a href="/files/#{File.basename(name)}">[#{ext}]</a>)
+          break
+        end
+      end
+      output
+    end
+
     def open_window(path,title,text,name,w=640,h=480)
       %Q[<a name="#{name}" onclick="w=window.open('#{path}', '#{title}','resizable=yes, location=no, width=#{w}, height=#{h},menubar=no, status=no, scrollbars=yes, toolbar=no'); w.focus(); return false;">
 #{text}
 </a>]     
     end
-
-    # xxx link_hp, link_... xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
     
   end # module RendererHelpers
 
