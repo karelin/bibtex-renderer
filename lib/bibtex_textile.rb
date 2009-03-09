@@ -52,10 +52,14 @@ module BibTextile
         begin
           all=$~
           entries=$1.split(',').map do |key|
-            entry=BibTextile.bibdata[key]
-            raise "unknown BibTeX entry '#{key}'" if entry.nil?             
-            entry           
-          end                                        
+            if key =~ /^%/ then 
+              entry=nil 
+            else 
+              entry=BibTextile.bibdata[key]
+              raise "unknown BibTeX entry '#{key}'" if entry.nil?
+            end
+            entry                    
+          end.compact                                       
           
           n=@@lock_collect.synchronize do
             list=@@collect_cite[Thread.current] || []      
@@ -176,10 +180,14 @@ module BibTextile
               entries=BibTextile.bibdata.query(options)
             else
               entries=items.split(',').map do |key|
-                entry=BibTextile.bibdata[key]
-                raise "unknown BibTeX entry '#{key}'" if entry.nil?                  
+                if key =~ /^%/ then 
+                  entry=nil 
+                else 
+                  entry=BibTextile.bibdata[key]
+                  raise "unknown BibTeX entry '#{key}'" if entry.nil?
+                end
                 entry
-              end
+              end.compact
             end         
 
             render(template_id,entries,delimiter)
