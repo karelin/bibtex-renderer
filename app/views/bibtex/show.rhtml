@@ -17,15 +17,15 @@
             html(:escape => false) %>
     </code>
 
-  <% end %>
+  <% end %>  
 
   <% if i+1<@entries.size %>
      <p><hr><p>
   <% else	%>
     <p>	
-  <% end %>
-<% end %>
+  <% end %> 
 
+<% end %>
 
 <% content_for :header_tags do %>
     <%= javascript_include_tag 'context_menu' %>

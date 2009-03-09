@@ -221,7 +221,7 @@ module BibTextile
     end
    
     # render link for direct download of document (pdf,ps)
-    def render_dl_doc(entry)
+    def RendererHelpers.render_dl_doc_(entry)
       output=''
       template=File.join(RAILS_ROOT, "/public/files/#{entry['$id'].downcase.gsub(':','-')}.%s")
       ['pdf','pdf.gz','ps','ps.gz'].each do |ext|
@@ -233,6 +233,10 @@ module BibTextile
         end
       end
       output
+    end
+
+    def render_dl_doc(entry)
+      RendererHelpers.render_dl_doc_(entry)
     end
 
     def open_window(path,title,text,name,w=640,h=480)
