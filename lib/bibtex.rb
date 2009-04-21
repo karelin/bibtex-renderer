@@ -368,7 +368,6 @@ module BibTeX
           data+=@lex.token_text+' '
           next_token
         end
-        data+='"'
         next_token
       else
         n=1
