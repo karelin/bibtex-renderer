@@ -366,7 +366,10 @@ module BibTeX
       if delim[0]==:quote
         while @lookahead!=:quote
           data+=@lex.token_text+' '
+          next_token
         end
+        data+='"'
+        next_token
       else
         n=1
         while n!=0 && @lookahead!=:eoi
