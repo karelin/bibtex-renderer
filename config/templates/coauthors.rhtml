@@ -9,11 +9,13 @@
        authors[name]+=1 
      end  
    end
+
    author_list=authors.keys.sort do |a,b|
      a[0].downcase <=> b[0].downcase
    end.
    each do |author|
 %>
+
 <%= BibTextile.link_to_hompages("#{author[1]} #{author[0]} (#{authors[author]})<br>") %>
 <% end %>
 

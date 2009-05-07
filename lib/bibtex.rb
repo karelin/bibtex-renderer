@@ -93,6 +93,7 @@ module BibTeX
 
   # convert to html
   def BibTeX.latex2html(text)
+    return "" if text.nil?
     rv=text.dup
     RULES_LATEX2HTML.each do |pr|
       rv=rv.gsub(pr[0],pr[1])
