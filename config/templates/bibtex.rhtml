@@ -1,10 +1,11 @@
 <%# template for !bibtex{} %>
 <% if CodeRay %>
 <%= 
-'<code class="bibtex CodeRay">'+
+'<code class="bibtex syntaxhl">'+
 CodeRay.scan(entry.to_bib({:suppress => ['abstract','paddress','isbn'],:sort=>nil}).
-                   gsub(/\n/,'<br>'),'bibtex').
-        html(:escape => false) +'</code>'
+                    		     gsub(/\n/,"<br>"),:bibtex).	
+        html(:escape => false). # HACK below: :escpae option does not apply anymore :-(
+	gsub(/&lt;/,'<').gsub(/&gt;/,'>').gsub(/&quot;/,'"') +'</code>'
 %>
 <% else %>
 <tt><%= entry.to_bib({:suppress => ['abstract','paddress','isbn'],:sort=>nil}).
