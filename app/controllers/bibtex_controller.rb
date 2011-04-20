@@ -1,6 +1,6 @@
 
 class BibtexController < ApplicationController
-  before_filter :require_login
+  before_filter :require_login, :except => [ :show, :abstract ]
 
   helper :issues
 
