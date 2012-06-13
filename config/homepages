@@ -6,7 +6,7 @@ Botsch			M\.|Mario		http://cg.www.techfak.uni-bielefeld.de/people/botsch.php
 Pauly			M\.|Mark		http://lgg.epfl.ch/people.php?p=1
 Kobbelt			L\.(P\.)?|Leif(\s+P.)?	http://www-i8.informatik.rwth-aachen.de/index.php?id=4
 Alliez			P\.|Pierre		http://www-sop.inria.fr/members/Pierre.Alliez/
-L(&eacute\;|e)vy 	B\.|Bruno		http://alice.loria.fr/index.php/bruno-levy.html
+L(&eacute\;|e|é)vy 	B\.|Bruno		http://alice.loria.fr/index.php/bruno-levy.html
 Zayer			R\.|Rhaleb		http://alice.loria.fr/index.php/members.html
 Bischoff		S\.|Stephan		http://www-i8.informatik.rwth-aachen.de/index.php?id=4
 Alexa			M\.|Marc		http://cg.cs.tu-berlin.de/~marc/
@@ -49,4 +49,5 @@ Vallet			B\.|Bruno		http://www.loria.fr/~vallet/
 Durand			F\.|Fr(&eacute\;|e)do	http://people.csail.mit.edu/fredo
 Bommes			D\.|David		http://www.graphics.rwth-aachen.de/index.php?id=4
 Kindlmann		G\.|Gordon		http://people.cs.uchicago.edu/~glk/
+Rusinkiewicz		S\.|Szymon		http://www.cs.princeton.edu/~smr/
 
