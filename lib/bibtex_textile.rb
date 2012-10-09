@@ -575,15 +575,13 @@ module BibTextile
         pattern=hp[0]
         url=hp[1]
         if text =~ hp[0]
-          #matched=$&
           matched << [ $&, url ]          
-          #text.sub!(matched,%Q(<a href="#{url}">#{matched}</a>))
         end            
       end
      
       matched.each do |match,url|
-        #text.sub!(match,%Q(<a href="#{url}">#{match}</a>))
-        text.sub!(match,%Q("#{match}":#{url}))
+        text.sub!(match,%Q(<a href="#{url}">#{match}</a>))
+        #text.sub!(match,%Q("#{match}":#{url} ))
       end
 
     end
