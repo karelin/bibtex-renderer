@@ -567,17 +567,25 @@ module BibTextile
     errors
   end
   
-  # apply substitutions in text to add links to homapages
-  def BibTextile.link_to_hompages(text)
+  # apply substitutions in text to add links to homepages
+  def BibTextile.link_to_hompages(text)    
     if text =~ BibTextile.homepages_pattern            
+      matched=[]
       BibTextile.homepages.each do |hp|
         pattern=hp[0]
         url=hp[1]
         if text =~ hp[0]
-          matched=$&          
-          text.sub!(matched,%Q(<a href="#{url}">#{matched}</a>))
+          #matched=$&
+          matched << [ $&, url ]          
+          #text.sub!(matched,%Q(<a href="#{url}">#{matched}</a>))
         end            
       end
+     
+      matched.each do |match,url|
+        #text.sub!(match,%Q(<a href="#{url}">#{match}</a>))
+        text.sub!(match,%Q("#{match}":#{url}))
+      end
+
     end
     text
   end
