@@ -10,11 +10,6 @@
      end  
    end
 
-File.open("/tmp/log","a") { |f|
-f.puts "\n#{entries.inspect}"       
-}
-   
-
    author_list=authors.keys.sort do |a,b|
      a[0].downcase <=> b[0].downcase
    end.
