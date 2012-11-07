@@ -622,12 +622,12 @@ END
     #   the default is undefined fields pass all tests.
     # - Returns an Array which is empty if a block was given.
     def query(options)                 
-      #File.open('/tmp/log','a') { |ff| ff.puts '---'; ff.puts options.inspect
-      rv=[]      
+      File.open('/tmp/log','a') { |ff| ff.puts '---'; ff.puts options.inspect ; ff.puts self.size
+      rv=[]
       self.each_value do |entry|
         output=true
 
-        #ff.puts entry['$from_source'].inspect
+        ff.puts entry['$from_source'].inspect
 
         if options.has_key?(:predicate)
           raise 'predicates are disabled' if @@predicates_disabled
@@ -651,9 +651,11 @@ END
                 #ff.puts field.inspect                
                 output &&= (value =~ field.to_s)
                 #ff.puts output
-              else                
+              else 
+                #ff.puts 'HERE'
                 output &&= (Regexp.new(value) =~ field.to_s)
               end
+              #ff.puts output
             end
 
             break if !output
@@ -668,8 +670,11 @@ END
           end     
         end
       end
-        return rv
-      #} # ff      
+
+      ff.puts rv.size
+
+      return rv
+      } # ff      
     end
     
     # get index of all authors (array "firstname lastname" sorted by last word)
